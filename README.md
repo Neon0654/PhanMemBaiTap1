@@ -1,3 +1,4 @@
+# Trần Thanh Hoài_2280601015
 # 📦 Product Management System - Full Stack Project
 
 A complete full-stack application demonstrating Node.js + Express backend with React + Vite frontend for managing and displaying product inventory.
