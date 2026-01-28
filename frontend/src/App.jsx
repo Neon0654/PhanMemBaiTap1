@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import Dashboard from './components/Dashboard'
 import ProductTable from './components/ProductTable'
 
 const API_BASE_URL = 'http://localhost:5000/api'
@@ -67,7 +66,6 @@ function App() {
         <div className="loading">⏳ Loading data from backend...</div>
       ) : (
         <>
-          <Dashboard stats={stats} />
           <ProductTable products={products} />
         </>
       )}
