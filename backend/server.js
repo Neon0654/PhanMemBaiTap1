@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import products from './data/products.json' with { type: 'json' };
 
 const app = express();
 const PORT = 5000;
@@ -12,29 +13,26 @@ app.use(express.json());
 // PRODUCT CLASS
 // ============================================
 class Product {
-  constructor(id, name, price, quantity, category, isAvailable) {
+  constructor({
+    id,
+    name,
+    price,
+    quantity,
+    category,
+    isAvailable,
+    description,
+    images,
+  }) {
     this.id = id;
-    this.name = name;
+    this.title = name;
     this.price = price;
     this.quantity = quantity;
     this.category = category;
     this.isAvailable = isAvailable;
+    this.description = description;
+    this.images = images;
   }
 }
-
-// ============================================
-// INITIALIZE PRODUCTS ARRAY
-// ============================================
-const products = [
-  new Product(1, 'iPhone 15 Pro', 25000000, 15, 'Electronics', true),
-  new Product(2, 'Samsung Galaxy S24', 22000000, 8, 'Electronics', true),
-  new Product(3, 'iPad Air', 18000000, 5, 'Electronics', false),
-  new Product(4, 'AirPods Pro', 7990000, 25, 'Accessories', true),
-  new Product(5, 'USB-C Cable', 500000, 50, 'Accessories', true),
-  new Product(6, 'Phone Stand', 300000, 0, 'Accessories', false),
-  new Product(7, 'Apple Watch Ultra', 16990000, 12, 'Electronics', true),
-  new Product(8, 'Screen Protector', 150000, 100, 'Accessories', true)
-];
 
 // ============================================
 // API 1: Get only name and price of all products
