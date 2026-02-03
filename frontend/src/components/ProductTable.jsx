@@ -1,65 +1,122 @@
-import React from 'react'
+import React, { useState } from 'react'
+import axios from 'axios'
+import './PostTable.css'
 
-function ProductTable({ products }) {
+const API_BASE_URL = 'http://localhost:5000/api'
+
+function PostTable({ products, onRefresh, onSelectPost, selectedPostId }) {
+  const [newTitle, setNewTitle] = useState('')
+  const [newViews, setNewViews] = useState('')
+  const [creating, setCreating] = useState(false)
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault()
+    if (!newTitle.trim()) {
+      alert('Please enter a title')
+      return
+    }
+
+    try {
+      setCreating(true)
+      await axios.post(`${API_BASE_URL}/posts`, {
+        title: newTitle,
+        views: parseInt(newViews) || 0
+      })
+      setNewTitle('')
+      setNewViews('')
+      onRefresh()
+    } catch (err) {
+      console.error('Error creating post:', err)
+      alert('Failed to create post')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return
+
+    try {
+      await axios.delete(`${API_BASE_URL}/posts/${postId}`)
+      onRefresh()
+    } catch (err) {
+      console.error('Error deleting post:', err)
+      alert('Failed to delete post')
+    }
+  }
+
   return (
     <div className="table-container">
-      <h2>📋 All Products</h2>
+      <h2>📋 All Posts</h2>
+
+      {/* Create Post Form */}
+      <form onSubmit={handleCreatePost} className="create-post-form">
+        <input
+          type="text"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          placeholder="Post title"
+          disabled={creating}
+        />
+        <input
+          type="number"
+          value={newViews}
+          onChange={(e) => setNewViews(e.target.value)}
+          placeholder="Views (optional)"
+          disabled={creating}
+        />
+        <button type="submit" disabled={creating}>
+          {creating ? 'Creating...' : '➕ Create Post'}
+        </button>
+      </form>
 
       <table>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Slug</th>
-            <th>Category</th>
-            <th>Category Slug</th>
-            <th>Price (VND)</th>
-            <th>Description</th>
-            <th>Images</th>
-            <th>Created At</th>
-            <th>Update At</th>
+            <th>Title</th>
+            <th>Views</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {products.map((product) => (
-            <tr key={product.id}>
-              <td>#{product.id}</td>
+          {products.map((post) => (
+            <tr
+              key={post.id}
+              className={`${post.isDeleted ? 'deleted-row' : ''} ${selectedPostId === post.id ? 'selected-row' : ''}`}
+              onClick={() => onSelectPost(post.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td>#{post.id}</td>
 
-              <td>{product.title}</td>
+              <td className={post.isDeleted ? 'deleted-text' : ''}>
+                {post.title}
+              </td>
 
-              <td>{product.slug}</td>
-
-              <td>{product.category?.name}</td>
-
-              <td>{product.category?.slug}</td>
-
-              <td>{product.price?.toLocaleString('vi-VN')}</td>
-
-              <td>{product.description}</td>
-
+              <td>{post.views}</td>
 
               <td>
-                {product.images && product.images.length > 0 ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    width="60"
-                  />
+                {post.isDeleted ? (
+                  <span className="deleted-badge">Deleted</span>
                 ) : (
-                  'No image'
+                  <span className="active-badge">Active</span>
                 )}
               </td>
 
               <td>
-                {product.creationAt
-                  ? new Date(product.category.creationAt).toLocaleDateString('vi-VN')
-                  : 'N/A'}
-              </td>
-              <td>
-                {product.creationAt
-                  ? new Date(product.category.updatedAt).toLocaleDateString('vi-VN')
-                  : 'N/A'}
+                {!post.isDeleted && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeletePost(post.id)
+                    }}
+                    className="btn-delete-small"
+                  >
+                    🗑️ Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
@@ -69,4 +126,4 @@ function ProductTable({ products }) {
   )
 }
 
-export default ProductTable
+export default PostTable

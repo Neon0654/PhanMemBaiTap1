@@ -1,0 +1,101 @@
+.table-container {
+    padding: 20px;
+}
+
+/* Create Post Form */
+.create-post-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f0f8ff;
+    border-radius: 6px;
+}
+
+.create-post-form input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.create-post-form button {
+    padding: 8px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.create-post-form button:hover {
+    background-color: #218838;
+}
+
+.create-post-form button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #f5f5f5;
+}
+
+th,
+td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.deleted-row {
+    background-color: #fafafa;
+}
+
+.selected-row {
+    background-color: #e3f2fd !important;
+    border-left: 3px solid #2196f3;
+}
+
+.deleted-text {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.deleted-badge {
+    color: #fff;
+    background-color: #d9534f;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.active-badge {
+    color: #fff;
+    background-color: #5cb85c;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.btn-delete-small {
+    padding: 5px 10px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-delete-small:hover {
+    background-color: #c82333;
+}
