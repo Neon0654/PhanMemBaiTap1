@@ -1,391 +1,357 @@
-# Trần Thanh Hoài_2280601015
-# 📦 Product Management System - Full Stack Project
+# Trần Thanh Hoài - 2280601015
 
-A complete full-stack application demonstrating Node.js + Express backend with React + Vite frontend for managing and displaying product inventory.
+# 📝 Blog Post Management System with JSON-Server
+
+A full-stack blog management application with soft delete, auto-increment IDs, and complete CRUD operations for posts and comments.
+
+---
+
+## 👨‍🎓 Student Information
+
+- **Full Name:** Trần Thanh Hoài
+- **Student ID (MSSV):** 2280601015
 
 ---
 
 ## 🏗️ Project Structure
 
 ```
-BT_1/
+PhanMemBaiTap1/
 ├── backend/
-│   ├── package.json          # Node.js dependencies
-│   ├── server.js             # Main Express server with all APIs
-│   └── node_modules/         # Dependencies (after npm install)
+│   ├── server.js             # Express server with custom middleware
+│   ├── package.json          # Backend dependencies
+│   └── data/
+│       └── db.json           # Database file (posts, comments, profile)
 │
 └── frontend/
-    ├── package.json          # React + Vite dependencies
-    ├── vite.config.js        # Vite configuration
+    ├── package.json          # Frontend dependencies
     ├── index.html            # HTML entry point
-    ├── node_modules/         # Dependencies (after npm install)
     └── src/
         ├── main.jsx          # React entry point
-        ├── App.jsx           # Main App component
+        ├── App.jsx           # Main application component
         ├── index.css         # Global styles
         └── components/
-            ├── Dashboard.jsx # Statistics dashboard
-            └── ProductTable.jsx # Product listing table
+            ├── ProductTable.jsx    # Post list with CRUD
+            ├── PostTable.css       # Post table styles
+            ├── CommentSection.jsx  # Comment management
+            └── CommentSection.css  # Comment styles
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 How to Run the Project
 
 ### Prerequisites
 - Node.js (v14 or higher)
-- npm or yarn
+- npm (comes with Node.js)
 
-### 1. Backend Setup
+### 1. Install Backend Dependencies
 
 ```bash
 cd backend
 npm install
-npm start
-# or npm run dev (with watch mode)
 ```
 
-The backend will start at: **http://localhost:5000**
+### 2. Start the Backend Server
 
-### 2. Frontend Setup (in a new terminal)
+```bash
+npm run dev
+```
+
+The backend server will start at: **http://localhost:5000**
+
+### 3. Install Frontend Dependencies (in a new terminal)
 
 ```bash
 cd frontend
 npm install
+```
+
+### 4. Start the Frontend Development Server
+
+```bash
 npm run dev
 ```
 
-The frontend will open at: **http://localhost:3000**
+The frontend will open at: **http://localhost:5173** (or the port shown in terminal)
 
 ---
 
-## 📋 Backend Implementation Details
+## ✨ Implemented Features
 
-### Product Class
+### 1️⃣ Soft Delete for Posts
 
+- Posts are **NOT removed** from `db.json` when deleted
+- Instead, the `isDeleted` field is set to `true`
+- Default value for new posts: `isDeleted: false`
+- Soft-deleted posts are still returned by the API
+
+**Implementation:**
 ```javascript
-class Product {
-  constructor(id, name, price, quantity, category, isAvailable) {
-    this.id = id;
-    this.name = name;
-    this.price = price;
-    this.quantity = quantity;
-    this.category = category;
-    this.isAvailable = isAvailable;
+// DELETE /api/posts/:id
+app.delete('/api/posts/:id', (req, res) => {
+  const post = posts.find(p => p.id === req.params.id);
+  if (!post) {
+    return res.status(404).json({ message: 'Post not found' });
   }
+  post.isDeleted = true;  // Soft delete
+  res.json({ message: 'Post soft deleted', post });
+});
+```
+
+### 2️⃣ Display Soft-Deleted Posts
+
+- Soft-deleted posts are displayed with **strikethrough text**
+- Background color changes to indicate deleted status
+- Badge shows "Deleted" status
+- Visual distinction makes it clear which posts are deleted
+
+**CSS Styling:**
+```css
+.deleted-text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.deleted-row {
+  background-color: #fafafa;
 }
 ```
 
-### Initialized Products
+### 3️⃣ Auto-Increment ID (String)
 
-The backend initializes 8 products across 2 categories:
-- **Electronics**: iPhone 15 Pro, Samsung Galaxy S24, iPad Air, Apple Watch Ultra
-- **Accessories**: AirPods Pro, USB-C Cable, Phone Stand, Screen Protector
+- IDs are stored as **strings** in `db.json`
+- Client does **NOT** send ID when creating posts/comments
+- Server automatically generates the next ID
+- ID generation logic:
+  1. Convert all existing IDs to numbers
+  2. Find the maximum ID
+  3. New ID = max ID + 1
+  4. Store as string
+
+**Implementation:**
+```javascript
+const generateId = (collection) => {
+  const ids = collection.map(item => Number(item.id));
+  const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+  return String(maxId + 1);
+};
+
+// Example: Existing IDs: ["1", "2", "5"] → New ID: "6"
+```
+
+### 4️⃣ Full CRUD for Comments
+
+All CRUD operations are implemented for comments:
+
+| Operation | Method | Endpoint | Description |
+|-----------|--------|----------|-------------|
+| **Create** | POST | `/api/comments` | Create new comment (auto-ID) |
+| **Read** | GET | `/api/posts/:postId/comments` | Get comments by postId |
+| **Update** | PUT | `/api/comments/:id` | Update comment text |
+| **Delete** | DELETE | `/api/comments/:id` | Delete comment (hard delete) |
+
+**Comment Structure:**
+```json
+{
+  "id": "1",
+  "text": "This is a comment",
+  "postId": "1"
+}
+```
 
 ---
 
 ## 📡 API Endpoints
 
-### 1. **GET /api/products**
-Returns all products with full details.
+### Posts API
 
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "iPhone 15 Pro",
-    "price": 25000000,
-    "quantity": 15,
-    "category": "Electronics",
-    "isAvailable": true
-  },
-  ...
-]
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/posts` | Get all posts (including soft-deleted) |
+| POST | `/api/posts` | Create new post (auto-generates ID) |
+| PUT | `/api/posts/:id` | Update post |
+| DELETE | `/api/posts/:id` | Soft delete post (sets isDeleted: true) |
 
-### 2. **GET /api/products/name-price**
-Returns only product name and price (Requirement #3).
+### Comments API
 
-**Response:**
-```json
-[
-  { "name": "iPhone 15 Pro", "price": 25000000 },
-  { "name": "Samsung Galaxy S24", "price": 22000000 },
-  ...
-]
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/posts/:postId/comments` | Get all comments for a post |
+| POST | `/api/comments` | Create new comment (auto-generates ID) |
+| PUT | `/api/comments/:id` | Update comment |
+| DELETE | `/api/comments/:id` | Delete comment (hard delete) |
 
-### 3. **GET /api/products/in-stock**
-Filters products with quantity > 0 (Requirement #4).
+---
 
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "iPhone 15 Pro",
-    "price": 25000000,
-    "quantity": 15,
-    "category": "Electronics",
-    "isAvailable": true
-  },
-  ...
-]
-```
+## 🧪 Testing the Features
 
-### 4. **GET /api/products/check-price**
-Checks if any product has price > 30,000,000 (Requirement #5).
+### Test Soft Delete
 
-**Response:**
+1. Open the frontend in browser
+2. Click the "🗑️ Delete" button on any post
+3. Confirm deletion
+4. The post will show with strikethrough and "Deleted" badge
+5. Check `backend/data/db.json` - the post still exists with `isDeleted: true`
+
+### Test Auto-Increment ID
+
+1. Create a new post using the form at the top
+2. Check the console or `db.json` - the new post has ID = max(existing IDs) + 1
+3. Create another post - ID increments correctly
+
+### Test Comment CRUD
+
+1. Click on any post in the table (row becomes highlighted)
+2. The comment section appears below
+3. **Create:** Type a comment and click "Add Comment"
+4. **Read:** All comments for the selected post are displayed
+5. **Update:** Click "Edit" on a comment, modify text, click "Save"
+6. **Delete:** Click "Delete" on a comment, confirm deletion
+
+---
+
+## 📊 Database Structure (db.json)
+
 ```json
 {
-  "hasPriceGreater": false,
-  "message": "No products with price > 30,000,000 found"
-}
-```
-
-### 5. **GET /api/products/check-accessories**
-Checks if all "Accessories" category products are available (Requirement #6).
-
-**Response:**
-```json
-{
-  "allAccessoriesAvailable": false,
-  "totalAccessories": 4,
-  "message": "Not all Accessories are available for sale"
-}
-```
-
-### 6. **GET /api/products/inventory-value**
-Calculates total inventory value = price × quantity (Requirement #7, uses for...of loop).
-
-**Response:**
-```json
-{
-  "totalInventoryValue": 1234567890,
-  "formattedValue": "1.234.567.890 VND"
-}
-```
-
-### 7. **GET /api/products/details**
-Uses for...of loop to return product name, category, and selling status (Requirement #8).
-
-**Response:**
-```json
-[
-  {
-    "name": "iPhone 15 Pro",
-    "category": "Electronics",
-    "sellingStatus": "Available"
-  },
-  ...
-]
-```
-
-### 8. **GET /api/products/properties/:id**
-Uses for...in loop on a product object to print all properties (Requirement #9).
-
-**Example:** `GET /api/products/properties/1`
-
-**Response:**
-```json
-{
-  "message": "Properties of product ID 1:",
-  "properties": {
-    "id": 1,
-    "name": "iPhone 15 Pro",
-    "price": 25000000,
-    "quantity": 15,
-    "category": "Electronics",
-    "isAvailable": true
+  "posts": [
+    {
+      "id": "1",
+      "title": "First Post",
+      "views": 100,
+      "isDeleted": false
+    },
+    {
+      "id": "2",
+      "title": "Deleted Post",
+      "views": 200,
+      "isDeleted": true
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "text": "Great post!",
+      "postId": "1"
+    },
+    {
+      "id": "2",
+      "text": "Thanks for sharing",
+      "postId": "1"
+    }
+  ],
+  "profile": {
+    "name": "typicode"
   }
 }
 ```
-
-### 9. **GET /api/products/available-in-stock**
-Returns product names that are both available AND in stock (Requirement #10).
-
-**Response:**
-```json
-{
-  "availableInStockProducts": [
-    "iPhone 15 Pro",
-    "Samsung Galaxy S24",
-    "AirPods Pro",
-    "USB-C Cable",
-    "Apple Watch Ultra",
-    "Screen Protector"
-  ],
-  "count": 6
-}
-```
-
----
-
-## 🎨 Frontend Components
-
-### App.jsx
-- Fetches data from all backend APIs
-- Manages loading and error states
-- Passes data to child components (Dashboard and ProductTable)
-
-### Dashboard.jsx
-Displays key statistics:
-- Total inventory value
-- Products in stock count
-- Premium products availability (price > 30M VND)
-- Accessories availability status
-- Count of products available AND in stock
-
-### ProductTable.jsx
-Displays all products in a table format with:
-- Product ID
-- Product Name
-- Category
-- Price (formatted)
-- Quantity
-- Selling Status (Available/Not Available)
-
----
-
-## 🔄 Backend-Frontend Communication
-
-### How They Connect:
-
-1. **CORS Configuration**: Backend uses `cors` middleware to allow frontend requests
-2. **API Base URL**: Frontend uses `http://localhost:5000/api` to communicate with backend
-3. **Axios HTTP Client**: Frontend uses axios to make HTTP requests
-4. **JSON Data Format**: All communication uses JSON
-
-### Data Flow:
-
-```
-Frontend (React/Vite)
-       ↓
-  Axios Request
-       ↓
-Express Routes
-       ↓
-Product Data Processing
-       ↓
-JSON Response
-       ↓
-React State Update
-       ↓
-Component Re-render
-```
-
-### Example Request Flow:
-
-```javascript
-// Frontend (App.jsx)
-const productsRes = await axios.get(`${API_BASE_URL}/products`)
-// Makes GET request to: http://localhost:5000/api/products
-
-// Backend (server.js)
-app.get('/api/products', (req, res) => {
-  res.json(products);  // Returns products array as JSON
-});
-```
-
----
-
-## 🧪 Testing the APIs
-
-### Using cURL:
-
-```bash
-# Get all products
-curl http://localhost:5000/api/products
-
-# Get name and price only
-curl http://localhost:5000/api/products/name-price
-
-# Get in-stock products
-curl http://localhost:5000/api/products/in-stock
-
-# Check if any product > 30M
-curl http://localhost:5000/api/products/check-price
-
-# Check if all accessories available
-curl http://localhost:5000/api/products/check-accessories
-
-# Get inventory value
-curl http://localhost:5000/api/products/inventory-value
-
-# Get product details (for...of loop)
-curl http://localhost:5000/api/products/details
-
-# Get product properties (for...in loop) - example with ID 1
-curl http://localhost:5000/api/products/properties/1
-
-# Get available and in-stock products
-curl http://localhost:5000/api/products/available-in-stock
-```
-
-### Using Postman:
-1. Import the API endpoints listed above
-2. Test each endpoint individually
-3. Verify JSON responses match the expected format
-
----
-
-## 📝 Key Features
-
-✅ **Product Class**: Constructor function to create product objects
-✅ **Product Array**: 8 products initialized with various properties
-✅ **Name & Price API**: Returns only necessary fields (Requirement #3)
-✅ **In-Stock Filter**: Products with quantity > 0 (Requirement #4)
-✅ **Price Check**: Verifies products with price > 30M (Requirement #5)
-✅ **Accessories Check**: Validates all accessories availability (Requirement #6)
-✅ **Inventory Value**: Calculates total value with for...of loop (Requirement #7)
-✅ **For...of Loop**: Iterates products for name, category, status (Requirement #8)
-✅ **For...in Loop**: Enumerates product properties (Requirement #9)
-✅ **Available & In-Stock**: Returns products meeting both conditions (Requirement #10)
-✅ **Responsive UI**: Dashboard and product table display
-✅ **Error Handling**: Displays user-friendly error messages
 
 ---
 
 ## 🛠️ Technologies Used
 
-### Backend:
+### Backend
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web framework
 - **CORS** - Cross-origin resource sharing
 
-### Frontend:
+### Frontend
 - **React** - UI library
 - **Vite** - Build tool and dev server
-- **Axios** - HTTP client
+- **Axios** - HTTP client for API requests
 - **CSS3** - Styling
 
 ---
 
-## 📚 Educational Value
+## 📝 Implementation Summary
 
-This project is suitable for students learning:
-- JavaScript ES6 classes and objects
-- Array methods: map(), filter(), some(), every()
-- Loop structures: for...of and for...in
-- RESTful API design
-- Express.js basics
-- React hooks (useState, useEffect)
-- HTTP requests and responses
-- Frontend-backend communication
+### Requirement 1: Soft Delete ✅
+- Implemented soft delete by setting `isDeleted: true`
+- Posts remain in database
+- DELETE endpoint updated to modify instead of remove
+
+### Requirement 2: Display Soft-Deleted Posts ✅
+- Soft-deleted posts shown with strikethrough
+- Different background color and badge
+- Clear visual distinction
+
+### Requirement 3: Auto-Increment String IDs ✅
+- Server generates IDs automatically
+- IDs stored as strings
+- Logic: find max ID, increment by 1
+
+### Requirement 4: Full CRUD for Comments ✅
+- Create: POST with auto-ID generation
+- Read: GET by postId
+- Update: PUT to modify text
+- Delete: DELETE to remove comment
+
+### Requirement 5: Documentation ✅
+- README with student name and ID
+- Instructions for running the project
+- API endpoint documentation
+- Feature explanations
 
 ---
 
-## 💡 Next Steps (Optional Enhancements)
+## 🎯 Key Features
 
-- Add product search/filter functionality
-- Implement pagination
-- Add product create/update/delete features
-- Add authentication
-- Add database (MongoDB, PostgreSQL)
-- Add unit tests
-- Deploy to cloud services
+✅ Soft delete for posts (no data loss)  
+✅ Visual distinction for deleted posts  
+✅ Auto-increment string IDs  
+✅ Full CRUD operations for posts  
+✅ Full CRUD operations for comments  
+✅ Interactive UI with post selection  
+✅ Real-time updates after operations  
+✅ Clean and responsive design  
+✅ Error handling and user feedback  
+
+---
+
+## 📸 Usage Guide
+
+1. **View Posts:** All posts are displayed in the table
+2. **Create Post:** Use the form at the top to add new posts
+3. **Delete Post:** Click the delete button (post becomes strikethrough)
+4. **Select Post:** Click on any row to view its comments
+5. **Manage Comments:** Add, edit, or delete comments in the comment section
+
+---
+
+## 🔧 Troubleshooting
+
+**Backend won't start:**
+- Make sure you're in the `backend` directory
+- Run `npm install` first
+- Check if port 5000 is available
+
+**Frontend can't connect:**
+- Ensure backend is running on port 5000
+- Check browser console for errors
+- Verify CORS is enabled in backend
+
+**Changes not persisting:**
+- Check `backend/data/db.json` file permissions
+- Ensure server has write access
+
+---
+
+## 📚 Learning Outcomes
+
+This project demonstrates:
+- RESTful API design principles
+- Soft delete pattern implementation
+- Auto-increment ID generation
+- Full CRUD operations
+- Frontend-backend integration
+- React state management
+- Express middleware usage
+
+---
+
+**Project completed by:** Trần Thanh Hoài (2280601015)  
+**Date:** January 2026
 
 ---
 
